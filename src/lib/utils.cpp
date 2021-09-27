@@ -280,3 +280,67 @@ void DrawRectangles(cv::Mat &img,
     for (const auto &rect : vecRect)
         cv::rectangle(img, rect, WHITE_COLOR);
 }
+
+std::vector<std::vector<float>> evaluateHistogram(std::vector<cv::Mat> planes, cv::Rect ROI)
+{
+    cv::Mat mask = cv::Mat::zeros(planes[0].size(), CV_8U); // all 0
+    mask(ROI) = 1;
+
+    int histSize = 40;
+
+    float range[] = {0, 256};
+    const float *histRange = {range};
+
+    bool uniform = true;
+    bool accumulate = false;
+
+    std::vector<cv::Mat> hist = {cv::Mat(), cv::Mat(), cv::Mat()};
+
+    calcHist(&planes[0], 1, 0, mask, hist[0], 1, &histSize, &histRange, uniform, accumulate);
+    calcHist(&planes[1], 1, 0, mask, hist[1], 1, &histSize, &histRange, uniform, accumulate);
+    calcHist(&planes[2], 1, 0, mask, hist[2], 1, &histSize, &histRange, uniform, accumulate);
+
+    std::vector<std::vector<float>> hist_vec = {std::vector<float>(), std::vector<float>(), std::vector<float>()};
+    float *data_0 = (float *)hist[0].data;
+    float *data_1 = (float *)hist[1].data;
+    float *data_2 = (float *)hist[2].data;
+
+    std::vector<float> tmp_feature;
+    for (size_t i = 0; i < hist[0].total(); i++)
+    {
+        hist_vec[0].push_back((float)(data_0[i]));
+        hist_vec[1].push_back((float)(data_1[i]));
+        hist_vec[2].push_back((float)(data_2[i]));
+    }
+
+    // normalize
+    auto sum_0 = std::accumulate(hist_vec[0].begin(), hist_vec[0].end(), 0);
+    auto sum_1 = std::accumulate(hist_vec[1].begin(), hist_vec[1].end(), 0);
+    auto sum_2 = std::accumulate(hist_vec[2].begin(), hist_vec[2].end(), 0);
+
+    for (int i = 0; i < hist_vec[0].size(); i++)
+    {
+        hist_vec[0][i] = (float)hist_vec[0][i] / (float)sum_0;
+        hist_vec[1][i] = (float)hist_vec[1][i] / (float)sum_1;
+        hist_vec[2][i] = (float)hist_vec[2][i] / (float)sum_2;
+    }
+
+    // std::cout << "H hist vector\n";
+    // for (size_t i = 0; i < hist_vec[0].size(); i++)
+    // {
+    //     std::cout << (hist_vec[0][i]) << " * ";
+    // }
+    // std::cout << std::endl;
+
+    return hist_vec;
+}
+
+cv::Rect2i rescaleROI(cv::Rect2i ROI, float factor)
+{
+
+    auto bias = cv::Point2i(ROI.width, ROI.height) * factor/2.0;
+    auto TL = ROI.tl() + bias;
+    auto BR = ROI.br() - bias;
+    cv::Rect2i out = cv::Rect2i(TL, BR);
+    return out;
+}

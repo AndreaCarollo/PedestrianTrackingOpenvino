@@ -5,10 +5,10 @@
 
 // #include "./lib/pose_extractor.h"
 
-int main()
+int main(int argc, char *argv[])
 {
-    // cv::VideoCapture cap("../video.mp4");
-    cv::VideoCapture cap("/home/andrea/Desktop/video_test_multiperson/%4d.jpg");
+    cv::VideoCapture cap(argv[1]);
+    // cv::VideoCapture cap("/home/andrea/Desktop/video_test_multiperson/%4d.jpg");
     //_____________________________________________________________________________
     cv::Mat img, img_full_size;
     std::vector<std::vector<Point>> lista_punti = std::vector<std::vector<Point>>(18);
@@ -22,15 +22,20 @@ int main()
     // Start and end times
     time_t start, end;
     // Start time
-    std::time(&start);
+    // std::time(&start);
     double count_frame = 0;
     //___________________________
 
     //________ people tracking __
-    PeopleList peopleTrack;
-
+    TrackerPeople::PeopleList peopleTrack;
+    //___________________________
+    int tw = 10;
     for (;;)
     {
+        // start timing
+        if (count_frame == 1)
+            std::time(&start);
+
         cout << "frame " << count_frame << endl;
         cap >> img_full_size;
         if (img_full_size.empty())
@@ -38,23 +43,28 @@ int main()
             break;
         }
         img_full_size.copyTo(img);
-        // cv::imshow("Output", img);
-
-        // wait for show
-        // int k = waitKey(0);
 
         // people tracker
         peopleTrack.update(img);
         peopleTrack.plotBoxes(img);
         peopleTrack.plotTrack(img);
+        peopleTrack.plotStoryPosition(img);
 
         // show the image
         cv::imshow("Output", img);
 
         // wait for show
-        int k = waitKey(10);
-        if (k == 'q')
+        int k = waitKey(tw);
+        if (k == 'q' | k == 27)
             break;
+        else if (k == 'w')
+        {
+            tw = 0;
+        }
+        else if (k == 'r')
+        {
+            tw = 20;
+        }
 
         count_frame++;
     }

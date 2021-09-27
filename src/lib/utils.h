@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <vector>
+#include <numeric>
 
 #ifndef UTILS_LIB
 #define UTILS_LIB
@@ -54,7 +55,6 @@ std::vector<cv::Rect> DetectionPedestrian_on_frame(cv::Mat img, cv::dnn::Net *ne
 
 std::vector<cv::Rect> DetectionFaces_on_frame(cv::Mat img, cv::dnn::Net *network);
 
-
 const cv::Scalar WHITE_COLOR = cv::Scalar(255, 255, 255);
 
 cv::Rect VecToRect(const std::vector<float> &);
@@ -64,5 +64,9 @@ void DrawRectangles(cv::Mat &,
 
 void DrawRectangles(cv::Mat &,
                     const std::vector<cv::Rect> &);
-                    
+
+std::vector<std::vector<float>> evaluateHistogram(std::vector<cv::Mat> planes, cv::Rect ROI);
+
+cv::Rect2i rescaleROI(cv::Rect2i ROI, float factor);
+
 #endif

@@ -9,68 +9,81 @@
 #include "Hungarian.h"
 #include "nms.h"
 
-class Person
+namespace TrackerPeople
 {
-private:
-    /* data */
-public:
-    Person(/* args */);
-    ~Person();
-    cv::Rect2i Box;
-    int ID = -1;
-    bool is_user = false;
-    int counter_lost = 0;
-    void set_position(cv::Rect2i rect);
-    std::vector<float> reid_descriptor = std::vector<float>(256, 0);
-    std::vector<float> reid_descriptor_prev = std::vector<float>(256, 0);
-};
 
-class PeopleList
-{
-private:
-    /* data */
-    bool first_loop = true;
-    int max_counter_lost = 60;
+    class Person
+    {
+    private:
+        /* data */
+    public:
+        Person(/* args */);
+        ~Person();
+        cv::Rect2i Box, Box_scaled;
+        cv::Point2i centre;
+        int ID = -1;
+        bool is_user = false;
+        int counter_lost = 0;
+        void set_position(cv::Rect2i rect);
+        // histogram descriptor
+        std::vector<std::vector<float>> hist_descriptor = {std::vector<float>(50, 0), std::vector<float>(50, 0), std::vector<float>(50, 0)};
 
-    int max_id = 0;
-    std::string detector_xml, detector_bin;
-    std::string reid_xml, reid_bin;
-    cv::dnn::Net dnn_detector, dnn_reidentificator;
+        std::vector<float> reid_descriptor_prev = std::vector<float>(256, 0);
+        std::vector<float> reid_descriptor = std::vector<float>(256, 0);
 
-    std::vector<cv::Rect2i> detection_prev;
-    std::vector<cv::Rect2i> detection;
+        std::vector<cv::Point2i> story;
+    };
 
-    std::vector<std::vector<float>> descriptors_prev;
-    std::vector<std::vector<float>> descriptors;
+    class PeopleList
+    {
+    private:
+        /* data */
+        cv::Mat img, img_HSV;
 
-    std::vector<std::vector<double>> costMatrix;
-    HungarianAlgorithm HungAlgo;
-    std::vector<int> HungAssignment;
+        bool first_loop = true;
+        int max_counter_lost = 60;
 
-public:
-    std::vector<Person> list;
-    std::vector<Person> list_prev;
-    std::vector<Person> list_new;
+        int max_id = 0;
+        std::string detector_xml, detector_bin;
+        std::string reid_xml, reid_bin;
+        cv::dnn::Net dnn_detector, dnn_reidentificator;
 
-    int index_user_in_list;
-    Person user;
+        std::vector<cv::Rect2i> detection_prev;
+        std::vector<cv::Rect2i> detection;
 
-    void update(cv::Mat img);
-    void detectPeoples(cv::Mat img);
-    void extractPeopleDescriptors(cv::Mat img);
+        std::vector<std::vector<float>> descriptors_prev;
+        std::vector<std::vector<float>> descriptors;
 
-    void populateList();
+        std::vector<std::vector<double>> costMatrix;
+        HungarianAlgorithm HungAlgo;
+        std::vector<int> HungAssignment;
 
-    void generateCostMatrix(cv::Mat img);
-    void doHungarian();
+    public:
+        std::vector<Person> list;
+        std::vector<Person> list_prev;
+        std::vector<Person> list_new;
 
-    void sortNewDetection();
-    void extractUser();
-    void checkToKill();
+        int index_user_in_list;
+        TrackerPeople::Person user;
 
-    void plotBoxes(cv::Mat &img);
-    void plotTrack(cv::Mat &img);
+        void update(cv::Mat img);
+        void detectPeoples();
+        void extractPeopleDescriptors();
 
-    PeopleList();
-    ~PeopleList();
-};
+        void populateList();
+
+        void generateCostMatrix();
+        void doHungarian();
+
+        void sortNewDetection();
+        void extractUser();
+        void checkToKill();
+
+        void plotBoxes(cv::Mat &img);
+        void plotTrack(cv::Mat &img);
+        void plotStoryPosition(cv::Mat &img);
+
+        PeopleList();
+        ~PeopleList();
+    };
+}
